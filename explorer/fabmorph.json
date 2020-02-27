@@ -1,0 +1,74 @@
+{
+  "name":"tls_default",
+  "version":"1.0.0",
+  "client":{
+    "tlsEnable": true,
+    "adminUser": "admin",
+    "adminPassword": "adminpw",
+    "enableAuthentication": false,
+    "organization":"PTBMSP"
+  },
+  "channels": {
+    "ptb-channel": {
+        "peers": {
+            "peer0.ptb.de": {},
+            "peer1.ptb.de": {}
+        },
+	"connection": {
+	    "timeout": {
+		"peer": {
+		    "endorser": "6000",
+		    "eventHub": "6000",
+		    "eventReg": "6000"
+		}
+	    }
+	}
+     }
+  },
+  "organizations":{
+    "ptb.de":{
+      "mspid": "PTBMSP",
+      "fullpath": true,
+      "adminPrivateKey":{
+         "path": "/tmp/crypto/peerOrganizations/ptb.de/users/Admin@ptb.de/msp/keystore/e3dfeaf15721bd4aae7b0350490959f0e54c6b5da8d392a086becf78706bdf9a_sk"
+      },
+      "signedCert":{
+         "path": "/tmp/crypto/peerOrganizations/ptb.de/users/Admin@ptb.de/msp/signcerts/Admin@ptb.de-cert.pem"
+      }
+    }
+  },
+  "peers":{
+    "peer0.ptb.de":{
+      "url":"grpcs://peer0.ptb.de:7051",
+      "eventUrl":"grpcs://peer0.ptb.de:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer0.ptb.de"
+      },
+      "tlsCACerts": {
+        "path": "/tmp/crypto/peerOrganizations/ptb.de/tlsca/tlsca.ptb.de-cert.pem"
+      },
+      "clientKey": {
+        "path": "/tmp/crypto/peerOrganizations/ptb.de/peers/peer0.ptb.de/tls/server.key"
+      },
+      "clientCert": {
+        "path": "/tmp/crypto/peerOrganizations/ptb.de/peers/peer0.ptb.de/tls/server.crt"
+      }
+    },
+    "peer1.ptb.de":{
+      "url":"grpcs://peer1.ptb.de:8051",
+      "eventUrl":"grpcs://peer1.ptb.de:8053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer1.ptb.de"
+      },
+      "tlsCACerts": {
+        "path": "/tmp/crypto/peerOrganizations/ptb.de/tlsca/tlsca.ptb.de-cert.pem"
+      },
+      "clientKey": {
+        "path": "/tmp/crypto/peerOrganizations/ptb.de/peers/peer1.ptb.de/tls/server.key"
+      },
+      "clientCert": {
+        "path": "/tmp/crypto/peerOrganizations/ptb.de/peers/peer1.ptb.de/tls/server.crt"
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+	"network-configs": {
+		"tls_default": {
+			"name": "tls_default",
+			"profile": "./connection-profile/fabmorph.json"
+		}
+	},
+	"license": "Apache-2.0"
+}

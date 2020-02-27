@@ -1,0 +1,49 @@
+DEVELOP the chaincode
+
+https://hyperledger-fabric.readthedocs.io/en/release-1.4/chaincode4ade.html
+
+#this command install golang shim interface, so you can compile the chaincode in the host machine
+
+$ http_proxy="http://webproxy.berlin.ptb.de:8080" go get -u github.com/hyperledger/fabric/core/chaincode/shim
+
+
+CHAINCODE FABMORPH COMMAND
+
+
+https://hyperledger-fabric.readthedocs.io/en/release-1.4/commands/peerchaincode.html
+
+Examples:
+
+docker exec cli0 peer chaincode install -n fabmorph -p github.com/hyperledger/fabric/peer/channel-artifacts/fabmorph -v 1.0
+
+docker exec cli0 peer chaincode instantiate -o orderer.ptb.de:7050 -C ptb-channel -n fabmorph -v 1.0 -c '{"Args":[]}'
+
+docker exec cli0 peer chaincode upgrade -o orderer.ptb.de:7050 -C ptb-channel -n fabmorph -v 1.1 -c '{"Args":[]}'
+
+
+#invoke chaincode examples
+
+docker exec cli0 peer chaincode invoke -o orderer.ptb.de:7050 -C ptb-channel -n fabmorph -c '{"Args":["registerMeter","666","512,9317708529424897702020382930116702407110920461631622943398410342176567591986029379418525445868266642035599843718252107477949966673217711651921453503121487,9317708529424897702020382930116702407110920461631622943398410342176567591986029379418525445868266642035599843718252107477949966673217711651921453503121488,86819692239317489725316183176771020092518150021809920212138582338877238932485744449732551095045029334111747236626667783012791667259632343428969631355566392144138916566553732073336450909522598178337851231139983633513413742668052750450987148230613227511148290981572584270867994369223203735104934252452681091169"]}'
+
+docker exec cli0 peer chaincode invoke -o orderer.ptb.de:7050 -C ptb-channel -n fabmorph -c '{"Args":["insertMeasurement","666","98"]}'
+
+
+
+	//test if strpubkey is a empty string
+	if len(strpubkey) > 0 {
+		//there is a public key, so we need to encrypt the measurement
+		pubkey := String2PubKey(strpubkey)
+
+		if pubkey != nil {
+			//encrypts the initial consumption
+			encrypMeasure, err := Encrypt(pubkey, plainMeasure.Bytes())
+
+			//test if encryptation had success
+			if err != nil {
+				return shim.Error("Error on encrypting with the informed public key")
+			}			
+			encrypMeasureString = Bytes2String(encrypMeasure)
+		}
+	}
+
+

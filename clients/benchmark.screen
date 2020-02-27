@@ -1,0 +1,9 @@
+##############################################################################
+# THE PAILLIER EXPERIMENT BENCHMARK
+#
+# We are starting the benckmark experiment now. That will shutdown any docker
+# container in execution, create a new instance of the PTB blockchain network,
+# inserting the new meters records and finally to performe the benchmark
+# while collecting statistic information.
+##############################################################################
+

@@ -1,0 +1,55 @@
+
+# SPDX-License-Identifier: Apache-2.0
+version: '2.1'
+
+volumes:
+  pgdata:
+  walletstore:
+
+networks:
+  explorer-ptb:
+    external:
+      name: tls_default
+
+services:
+  explorerdb:
+    image: hyperledger/explorer-db:latest
+    container_name: explorerdb.ptb.de
+    hostname: explorerdb.ptb.de
+    environment:
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWORD=password
+    volumes:
+      #- ./app/persistence/fabric/postgreSQL/db/createdb.sh:/docker-entrypoint-initdb.d/createdb.sh
+      - ./createdb.sh:/docker-entrypoint-initdb.d/createdb.sh
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - explorer-ptb
+
+  explorer:
+    image: hyperledger/explorer:latest
+    container_name: explorer.ptb.de
+    hostname: explorer.ptb.de
+    environment:
+      - DATABASE_HOST=explorerdb.ptb.de
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWD=password
+      - LOG_LEVEL_APP=debug
+      - LOG_LEVEL_DB=debug
+      - LOG_LEVEL_CONSOLE=info
+      - LOG_CONSOLE_STDOUT=true
+      - DISCOVERY_AS_LOCALHOST=false
+      #- SSL_ENABLED=true
+    volumes:
+      - ./config.json:/opt/explorer/app/platform/fabric/config.json
+      - ./:/opt/explorer/app/platform/fabric/connection-profile
+      - ../tls/crypto-config:/tmp/crypto
+      - walletstore:/opt/wallet
+    depends_on:
+      - explorerdb
+    command: sh -c "sleep 16 && node /opt/explorer/main.js && tail -f /dev/null"
+    ports:
+      - 8080:8080
+    networks:
+      - explorer-ptb
