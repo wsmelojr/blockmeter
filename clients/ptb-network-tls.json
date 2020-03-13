@@ -39,7 +39,7 @@
       "users": {
         "Admin": {
           "cert": "../tls/crypto-config/ordererOrganizations/ptb.de/users/Admin@ptb.de/msp/signcerts/Admin@ptb.de-cert.pem",
-          "private_key": "../tls/crypto-config/ordererOrganizations/ptb.de/users/Admin@ptb.de/msp/keystore/2f7a390770bfa18c8265aa157f2a2f964907caacfb003ac435fe4114950a68b0_sk"}
+          "private_key": "../tls/crypto-config/ordererOrganizations/ptb.de/users/Admin@ptb.de/msp/keystore/d81d6f9d25fdb76090df8189ff19a9b1bb0c24258841933e60ae867a79f1a103_sk"}
       }
     },
     "ptb.de":{
@@ -54,7 +54,7 @@
       "users": {
         "Admin": {
           "cert": "../tls/crypto-config/peerOrganizations/ptb.de/users/Admin@ptb.de/msp/signcerts/Admin@ptb.de-cert.pem",
-          "private_key": "../tls/crypto-config/peerOrganizations/ptb.de/users/Admin@ptb.de/msp/keystore/e3dfeaf15721bd4aae7b0350490959f0e54c6b5da8d392a086becf78706bdf9a_sk"
+          "private_key": "../tls/crypto-config/peerOrganizations/ptb.de/users/Admin@ptb.de/msp/keystore/04b1529311fbdb2a9fd6b81ea5e21c8f368f9cf8824c062963e28d2fdf91fcc9_sk"
         }
       }
     }

@@ -17,12 +17,14 @@ import (
 	//the majority of the imports are trivial...
 	"bytes"
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/sha256"
+	"crypto/x509"
+	"encoding/asn1"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -47,12 +49,31 @@ basically works with 2 main features:
 type SmartContract struct {
 }
 
+// ECDSASignature represents the two mathematical components of an ECDSA signature once
+// decomposed.
+type ECDSASignature struct {
+	R, S *big.Int
+}
+
 // Meter constitutes our key|value struct (digital asset) and implements a single
 // record to manage the
 // meter public key and measures. All blockchain transactions operates with this type.
 // IMPORTANT: all the field names must start with upper case
 type Meter struct {
-	PubKey ecdsa.PublicKey `json:"pubkey"`
+	//PubKey ecdsa.PublicKey `json:"pubkey"`
+	PubKey string `json:"pubkey"`
+}
+
+// PublicKeyDecodePEM method decodes a PEM format public key. So the smart contract can lead
+// with it, store in the blockchain, or even verify a signature.
+// - pemEncodedPub - A PEM-format public key
+func PublicKeyDecodePEM(pemEncodedPub string) ecdsa.PublicKey {
+	blockPub, _ := pem.Decode([]byte(pemEncodedPub))
+	x509EncodedPub := blockPub.Bytes
+	genericPublicKey, _ := x509.ParsePKIXPublicKey(x509EncodedPub)
+	publicKey := genericPublicKey.(*ecdsa.PublicKey)
+
+	return *publicKey
 }
 
 // Init method is called when the fabpki is instantiated.
@@ -98,7 +119,7 @@ func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) sc.Response {
 	}
 
 	//function fn not implemented, notify error
-	return shim.Error("Chaincode do not support this function")
+	return shim.Error("Chaincode does not support this function.")
 }
 
 /*
@@ -116,16 +137,12 @@ func (s *SmartContract) registerMeter(stub shim.ChaincodeStubInterface, args []s
 		return shim.Error("It was expected the parameters: <meter id> <public key> [encrypted inital consumption]")
 	}
 
-	//gets the parameters associated with the meter ID and the public key (in string format)
+	//gets the parameters associated with the meter ID and the public key (in PEM format)
 	meterid := args[0]
 	strpubkey := args[1]
 
-	fmt.Println("That must be your public key: (", strpubkey, ")")
-
-	var myPubKey = ecdsa.PublicKey{}
-
-	//creates the meter record
-	var meter = Meter{PubKey: myPubKey}
+	//creates the meter record with the respective public key
+	var meter = Meter{PubKey: strpubkey}
 
 	//encapsulates meter in a JSON structure
 	meterAsBytes, _ := json.Marshal(meter)
@@ -147,20 +164,77 @@ func (s *SmartContract) registerMeter(stub shim.ChaincodeStubInterface, args []s
 	encrypted measurement consumption information.
 	The vector args[] must contain two parameters:
 	- args[0] - meter ID
-	- args[1] - the encrypted measurement, in a string representing a big int number.
+	- args[1] - the legally relevant information, in a string representing a big int number.
+	- args[2] - the signature digest, in base64 encode format.
 */
 func (s *SmartContract) checkSignature(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	//validate args vector lenght
-	if len(args) != 2 {
-		return shim.Error("It was expected 2 parameter: <meter ID> <measurement>")
+	if len(args) != 3 {
+		return shim.Error("It was expected 3 parameter: <meter ID> <information> <signature>")
 	}
 
-	//gets the parameter associated with the meter ID and the incremental measurement
-	//meterid := args[0]
+	//gets the parameter associated with the meter ID and the digital signature
+	meterid := args[0]
+	info := args[1]
+	sign := args[2]
+
+	//loging...
+	fmt.Println("Testing args: ", meterid, info, sign)
+
+	//retrive meter record
+	meterAsBytes, err := stub.GetState(meterid)
+
+	//test if we receive a valid meter ID
+	if err != nil || meterAsBytes == nil {
+		return shim.Error("Error on retrieving meter ID register")
+	}
+
+	//creates Meter struct to manipulate returned bytes
+	MyMeter := Meter{}
+
+	//loging...
+	fmt.Println("Retrieving meter bytes: ", meterAsBytes)
+
+	//convert bytes into a Meter object
+	json.Unmarshal(meterAsBytes, &MyMeter)
+
+	//decode de public key to the internal format
+	pubkey := PublicKeyDecodePEM(MyMeter.PubKey)
+
+	//loging...
+	fmt.Println("Retrieving meter after unmarshall: ", MyMeter)
+
+	//calculates the information hash
+	hash := sha256.Sum256([]byte(info))
+
+	//now we decode the signature to extract the DER-encoded byte string
+	der, err := base64.StdEncoding.DecodeString(sign)
+	if err != nil {
+		return shim.Error("Error on decode the digital signature")
+	}
+
+	//creates a signature data structure
+	sig := &ECDSASignature{}
+
+	//unmarshal the R and S components of the ASN.1-encoded signature
+	_, err = asn1.Unmarshal(der, sig)
+	if err != nil {
+		return shim.Error("Error on get R and S terms from the digital signature")
+	}
+
+	//validates de digital signature
+	valid := ecdsa.Verify(&pubkey, hash[:], sig.R, sig.S)
+
+	// buffer is a JSON array containing records
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+	buffer.WriteString("\"Counter\":")
+	buffer.WriteString(strconv.FormatBool(valid))
+	buffer.WriteString("]")
 
 	//notify procedure success
-	return shim.Success(nil)
+	return shim.Success(buffer.Bytes())
 }
 
 /*
@@ -446,55 +520,89 @@ func main() {
 
 	////////////////////////////////////////////////////////
 	// USE THIS BLOCK TO COMPILE THE CHAINCODE
-	//if err := shim.Start(new(SmartContract)); err != nil {
-	//	fmt.Printf("Error starting SmartContract chaincode: %s\n", err)
-	//}
+	if err := shim.Start(new(SmartContract)); err != nil {
+		fmt.Printf("Error starting SmartContract chaincode: %s\n", err)
+	}
 	////////////////////////////////////////////////////////
 
 	////////////////////////////////////////////////////////
 	// USE THIS BLOCK TO PERFORM ANY TEST WITH THE CHAINCODE
 
-	//create pair of keys
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		panic(err)
-	}
+	// //create pair of keys
+	// privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	//marshal the keys in a buffer
-	e, err := json.Marshal(privateKey)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// //marshal the keys in a buffer
+	// e, err := json.Marshal(privateKey)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	_ = ioutil.WriteFile("ecdsa-keys.json", e, 0644)
+	// _ = ioutil.WriteFile("ecdsa-keys.json", e, 0644)
 
-	//read the saved key
-	file, _ := ioutil.ReadFile("ecdsa-keys.json")
+	// //read the saved key
+	// file, _ := ioutil.ReadFile("ecdsa-keys.json")
 
-	myPrivKey := ecdsa.PrivateKey{}
-	//myPubKey := ecdsa.PublicKey{}
+	// myPrivKey := ecdsa.PrivateKey{}
+	// //myPubKey := ecdsa.PublicKey{}
 
-	_ = json.Unmarshal([]byte(file), &myPrivKey)
+	// _ = json.Unmarshal([]byte(file), &myPrivKey)
 
-	fmt.Println(myPrivKey)
-	myPubKey := myPrivKey.PublicKey
+	// fmt.Println("Essa é minha chave privada:")
+	// fmt.Println(myPrivKey)
 
-	//test digital signature verifying
-	msg := "hello, world"
-	hash := sha256.Sum256([]byte(msg))
+	// myPubKey := myPrivKey.PublicKey
 
-	r, s, err := ecdsa.Sign(rand.Reader, privateKey, hash[:])
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("signature: (0x%x, 0x%x)\n", r, s)
+	// //test digital signature verifying
+	// msg := "message"
+	// hash := sha256.Sum256([]byte(msg))
+	// fmt.Println("hash: ", hash)
 
-	myPubKey.Curve = elliptic.P256()
-	fmt.Println(myPubKey)
+	// r, s, err := ecdsa.Sign(rand.Reader, privateKey, hash[:])
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Printf("signature: (0x%x, 0x%x)\n", r, s)
 
-	valid := ecdsa.Verify(&myPubKey, hash[:], r, s)
-	fmt.Println("signature verified:", valid)
+	// myPubKey.Curve = elliptic.P256()
+
+	// fmt.Println("Essa é minha chave publica:")
+	// fmt.Println(myPubKey)
+
+	// valid := ecdsa.Verify(&myPubKey, hash[:], r, s)
+	// fmt.Println("signature verified:", valid)
+
+	// otherpk := "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6NXETwtkAKGWBcIsI6/OYE0EwsVj\n3Fc4hHTaReNfq6Hz2UEzsJKCYN0stjPCXbpdUlYtETC1a3EcS3SUVYX6qA==\n-----END PUBLIC KEY-----\n"
+
+	// newkey := PublicKeyDecodePEM(otherpk)
+	// myPubKey.Curve = elliptic.P256()
+
+	// //valid = ecdsa.Verify(newkey, hash[:], r, s)
+	// //fmt.Println("signature verified:", valid)
+
+	// mysign := "MEYCIQCY16jbdY222oEpFiSRwXPi1kS7c4wuwxYXeWJOoAjnVgIhAJQTM+itbm1mQyd40Ug0xr2/AvjZmFSdoc/iSSHA6nRI"
+
+	// // first decode the signature to extract the DER-encoded byte string
+	// der, err := base64.StdEncoding.DecodeString(mysign)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// // unmarshal the R and S components of the ASN.1-encoded signature into our
+	// // signature data structure
+	// sig := &ECDSASignature{}
+	// _, err = asn1.Unmarshal(der, sig)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// valid = ecdsa.Verify(&newkey, hash[:], sig.R, sig.S)
+	// fmt.Println("signature verified:", valid)
+
+	// fmt.Println("Curve: ", newkey.Curve.Params())
 
 	////////////////////////////////////////////////////////
 
