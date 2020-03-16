@@ -1,4 +1,4 @@
-# The BlockMeter Experiment: A blockchain-base PKI for Smart Meters
+# The BlockMeter Experiment: A blockchain-based PKI for Smart Meters
 
 This repository contains the implementation of the **BlockMeter Experiment**, developed at the Brazilian National Institute of Metrology, Quality, and Technology (Inmetro).
 
@@ -18,6 +18,8 @@ We describe in the next sections the main aspects related to the Fabric blockcha
 ## The customized blockchain network
 
 We use a very simple Fabric blockchain network with two ordinary peers (one of them being an endorser) and the solo orderer service. We also use [couchdb](https://hyperledger-fabric.readthedocs.io/en/release-1.4/couchdb_tutorial.html) containers to improve the performance on storing the ledger state on each peer.
+
+We are reusing a blockchain network of other project developed for us in the past. More informations about this network can be find in our respective publication, [here](https://link.springer.com/chapter/10.1007%2F978-3-030-39445-5_51).
 
 All the configuration files related to the blockchain network  are in the folder [tls](tls). The main files are:
 
@@ -39,11 +41,11 @@ Execute the [installation script](prerequirements/installFabric.sh):
 ./installFabric.sh
 ```
 
-**OBSERVATION**: you do not need to run the script as *sudo*. The script will automatically ask for your *sudo* password when necessary. That is important to keep the docker containers running with your working user account.
+**OBSERVATION**: You do not need to run the script as *sudo*. The script will automatically ask for your *sudo* password when necessary. That is important to keep the docker containers running with your working user account.
 
 ### 2. Generate the MSP artifacts
 
-Before to execute this step, check if the environment variable FABRIC_CFG_PATH is properly defined. If it is not, uncomment the following line in the script [ptbMSP.sh](tls/mspPTB.sh).
+Before executing this step, check if the environment variable FABRIC_CFG_PATH is properly defined. If it is not, uncomment the following line in the script [ptbMSP.sh](tls/mspPTB.sh).
 
 ```console
 export FABRIC_CFG_PATH=$PWD
@@ -55,7 +57,7 @@ After, in the folder [tls](tls), execute the script:
 ./mspPTB.sh
 ```
 
-This script uses [configtx.yaml](tls/configtx.yaml) and [crypto-config-ptb.yaml](tls/crypto-config-ptb.yaml) to create the MSP certificates in the folder (tls/crypto-config). It also generates the genesis block file *ptb-genesis.block* and the channel configuration file *ptb-channel.tx*. Noticed that this script depends on the tools installed together with Fabric. The script *installFabric.sh* executed previously is expected to modify your $PATH variable and enable the direct execution of the Fabric tools. If this does not happen, try to fix the $PATH manually. The tools usually are located in the folder /$HOME/fabric_samples/bin.
+This script uses [configtx.yaml](tls/configtx.yaml) and [crypto-config-ptb.yaml](tls/crypto-config-ptb.yaml) to create the MSP certificates in the folder [crypto-config](tls/crypto-config). It also generates the genesis block file *ptb-genesis.block* and the channel configuration file *ptb-channel.tx*. Notice that this script depends on the tools installed together with Fabric. The script *installFabric.sh* executed previously is expected to modify your $PATH variable and enable the direct execution of the Fabric tools. If this does not happen, try to fix the $PATH manually. The tools usually are located in the folder /$HOME/fabric_samples/bin.
 
 ### 3. Manage the docker containers
 
@@ -94,7 +96,7 @@ docker ps
 docker stats
 ```
 
-## The fabpki chaincode
+## The fabpki Chaincode
 
 In this document, we assume you already know how to implement and deploy a chaincode in Fabric. If this is not your case, there is a [nice tutorial](https://hyperledger-fabric.readthedocs.io/en/release-1.4/chaincode4ade.html) that covers a lot of information about this issue. We strongly recomend you to check it before to continue.
 
@@ -106,9 +108,9 @@ If you need to modify, compile and test the **fabpki** chaincode, be sure that y
 go get -u github.com/hyperledger/fabric/core/chaincode/shim
 ```
 
-### Shell commands to deal with a Fabric chaincode
+### Shell Commands to deal with a Fabric Chaincode
 
-Our blockchain network profile includes the client container *cli0* which is provided only to execute tests with the chaincode. The *cli0* is able to communicate with the blockchain network using the peer *peer0.ptb.de* as an anchor and so execute commands for installing, mantaining and testing the chaincode. These commands documentation can be find [here](https://hyperledger-fabric.readthedocs.io/en/release-1.4/commands/peerchaincode.html). We strongly recommend you read this documentation before continuing.
+Our blockchain network profile includes the client container *cli0* which is provided only to execute tests with the chaincode. The *cli0* is able to communicate with the blockchain network using the peer *peer0.ptb.de* as an anchor and so execute commands for installing and mantaining. These commands documentation can be found [here](https://hyperledger-fabric.readthedocs.io/en/release-1.4/commands/peerchaincode.html). We strongly recommend you read this documentation before continuing.
 
 #### 1. Installing, instantiating and upgrading a chaincode
 
