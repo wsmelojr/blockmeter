@@ -195,17 +195,17 @@ The Client Application includes the following modules:
 
 ## Using the Hyperledger Explorer
 
-The [Hyperledger Explorer](https://www.hyperledger.org/projects/explorer) is a web tool that helps to monitor the blockchain network with a friendly interface. Our repository incl.udes the extensions to use Explorer together with our experiment. We take the Explorer containers-based distribution, that consists of two Docker images:
+The [Hyperledger Explorer](https://www.hyperledger.org/projects/explorer) is a web tool that helps to monitor the blockchain network with a friendly interface. Our repository includes the extensions to use Explorer together with our experiment. We take the Explorer container-based distribution, that consists of two Docker images:
 * **explorer**: a web server which delivers the application.
-* **explorer-db**: a PostgreSQL database server that is required to run Hyperledger Explorer.
+* **explorer-db**: a PostgreSQL database server that is required to run Explorer.
 
-The follow steps describe how to start and stop the Hyperledger Explorer. Firstly, make sure that the blockchain network is up and that you executed the previous steps related to install and instantiate the *fabpki* chaincode. You can check these points with the following command:
+The following steps describe how to start and stop Explorer. Firstly, make sure that the blockchain network is up and that you executed the previous steps related to install and instantiate the *fabpki* chaincode. You can check these points with the following command:
 
 ```console
 docker ps
 ```
 
-Before continuing, you must fix the Hyperledger Explorer connection profile. We have this configuration in the file [fabpki.json](explorer/fabpki.json). Notice that this file is very similar to our Python client connection profile. The procedure to fix it is also the same. Find the "private_key" entry and replace the private key filename with the respective content in your MSP configuration. 
+Before continuing, you must fix the Explorer connection profile. We have this configuration in the file [fabpki.json](explorer/fabpki.json). Notice that this file is very similar to our Python client connection profile. The procedure to fix it is also similar. Find the **"adminPrivateKey"** entry and replace the private key filename (it finishes with "sk" suffix) with the respective filename in your MSP configuration. Do not change the file path, because it already points to the container internal path that the Explorer knows. 
 
 After, access the [explorer](explorer) folder and start the Hyperledger Explorer containers, as follows:
 ```console
@@ -213,7 +213,7 @@ cd explorer
 docker-compose -f explorer-ptb.yaml up -d
 ```
 
-The first execution will pulldown the Docker images, and also create the PostgresSQL database. These procedures can require some time to execute. After, wait 30 seconds and open the following local address in a web browser: [http:\\localhost:8080](http:\\localhost:8080). You must see the Hyperledger Explorer login screen.
+The first execution will pulldown the Docker images, and also create the PostgresSQL database. These procedures can require some time to execute. After, wait 30 seconds and open the following local address in a web browser: [http://localhost:8080](http://localhost:8080). You must see the Hyperledger Explorer login screen.
 
 If you need to stop or shutdown the Hyperledger Explore, proceed with the respective *docker-compose* commands, using *stop* to suspend the containers execution and *down* to remove the containers' instances. Here is as example:
 ```console
