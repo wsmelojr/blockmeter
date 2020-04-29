@@ -179,7 +179,7 @@ sudo make install
 ### Configure the .json network profile
 The Python SDK applications depend on a network profile encoded in a .json format. In this repository, this file the [ptb-network-tls.json](clients/ptb-network-tls.json) file. The network profile keeps the necessary credentials to access the blockchain network. You must configure this file properly every time that you create new digital certificates in the MSP:
 
-* Open the [ptb-network.json](clients/ptb-network.json) in a text editor;
+* Open the [ptb-network-tls.json](clients/ptb-network-tls.json) in a text editor;
 * Check for the entries called "private_key" on each organization. Notice that they points out to a file into the (../tls) directory that corresponds to the private key of each organization;
 * Check the MSP file structure in your deployment and verify the correct name of the files that contain the private key;
 * Modify the .json file with the correct name of the files.
@@ -191,3 +191,38 @@ The Client Application includes the following modules:
 * [keygen-ecdsa.py](clients/keygen-ecdsa.py): It is a simple Python script that generates a pair of ECDSA keys. These keys are necessary to run all the other modules.
 * [register-ecdsa.py](clients/register-ecdsa.py): It invokes the *registerMeter* chaincode, that appends a new meter digital asset into the ledger. You must provide the respective ECDSA public key.
 * [verify-ecdsa.py](clients/verify-ecdsa.py): It works as a client that verifies if a given digital signature corresponds to the meter's private key. The client must provide a piece of information and the respective digital signature. The client module will inform **True** for a legitimate signature and **False** in the opposite.
+
+
+## Using the Hyperledger Explorer
+
+The [Hyperledger Explorer](https://www.hyperledger.org/projects/explorer) is a web tool that helps to monitor the blockchain network with a friendly interface. Our repository incl.udes the extensions to use Explorer together with our experiment. We take the Explorer containers-based distribution, that consists of two Docker images:
+* **explorer**: a web server which delivers the application.
+* **explorer-db**: a PostgreSQL database server that is required to run Hyperledger Explorer.
+
+The follow steps describe how to start and stop the Hyperledger Explorer. Firstly, make sure that the blockchain network is up and that you executed the previous steps related to install and instantiate the *fabpki* chaincode. You can check these points with the following command:
+
+```console
+docker ps
+```
+
+Before continuing, you must fix the Hyperledger Explorer connection profile. We have this configuration in the file [fabpki.json](explorer/fabpki.json). Notice that this file is very similar to our Python client connection profile. The procedure to fix it is also the same. Find the "private_key" entry and replace the private key filename with the respective content in your MSP configuration. 
+
+After, access the [explorer](explorer) folder and start the Hyperledger Explorer containers, as follows:
+```console
+cd explorer
+docker-compose -f explorer-ptb.yaml up -d
+```
+
+The first execution will pulldown the Docker images, and also create the PostgresSQL database. These procedures can require some time to execute. After, wait 30 seconds and open the following local address in a web browser: [http:\\localhost:8080](http:\\localhost:8080). You must see the Hyperledger Explorer login screen.
+
+If you need to stop or shutdown the Hyperledger Explore, proceed with the respective *docker-compose* commands, using *stop* to suspend the containers execution and *down* to remove the containers' instances. Here is as example:
+```console
+docker-compose -f explorer-ptb.yaml down
+```
+
+Eventually, you will need to physically remove the database volumes associated with the Hyperledger Explorer. You can do that by executing the following commands:
+```console
+docker volume prune
+docker volume rm explorer_pgdata explorer_walletstore
+```
+

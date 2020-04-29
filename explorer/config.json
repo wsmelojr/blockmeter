@@ -2,7 +2,7 @@
 	"network-configs": {
 		"tls_default": {
 			"name": "tls_default",
-			"profile": "./connection-profile/fabmorph.json"
+			"profile": "./connection-profile/fabpki.json"
 		}
 	},
 	"license": "Apache-2.0"
