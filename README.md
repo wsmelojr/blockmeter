@@ -191,7 +191,8 @@ The Client Application includes the following modules:
 * [keygen-ecdsa.py](clients/keygen-ecdsa.py): It is a simple Python script that generates a pair of ECDSA keys. These keys are necessary to run all the other modules.
 * [register-ecdsa.py](clients/register-ecdsa.py): It invokes the *registerMeter* chaincode, that appends a new meter digital asset into the ledger. You must provide the respective ECDSA public key.
 * [verify-ecdsa.py](clients/verify-ecdsa.py): It works as a client that verifies if a given digital signature corresponds to the meter's private key. The client must provide a piece of information and the respective digital signature. The client module will inform **True** for a legitimate signature and **False** in the opposite.
-
+* [verify-ecdsa-regMeter-mp.py](clients/verify-ecdsa-regMeter-mp.py): This module is part of the multiprocessing client test and registers of all the meter IDs that will be used by the multiprocess client.
+* [verify-ecdsa-chkSign-mp.py](clients/verify-ecdsa-chkSign-mp.py): This module is a modifying in the multi thread client which enables multi processes and must be executed only after [verify-ecdsa-regMeter-mp.py](clients/verify-ecdsa-regMeter-mp.py). Also, the informed parameter must be the same in both modules.The signature checking returned **True** or **False**
 
 ## Using the Hyperledger Explorer
 
